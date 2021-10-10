@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.mapper.AdProductMapper">
+
+	<select id="mainCategory" resultType="com.docmall.domain.CategoryVO">
+		select cate_code_pk , cate_code_prt, cate_name from category_tbl2 where cate_code_prt is null
+	</select>
+	
+	<select id="subCategory" resultType="com.docmall.domain.CategoryVO">
+		select cate_code_pk , cate_code_prt, cate_name from category_tbl2 where cate_code_prt = #{cate_code_pk}
+	</select>
+
+	<insert id="Insert">
+		insert into product_tbl2(pdt_num_pk, cate_code, cate_code_prt, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount,pdt_buy) 
+		values(seq_product2.nextval, #{cate_code}, #{cate_code_prt}, #{pdt_name}, #{pdt_price}, #{pdt_discount}, #{pdt_company}, #{pdt_detail}, #{pdt_img}, #{pdt_amount},#{pdt_buy})
+	
+	</insert>
+	
+	
+	
+	<sql id="criteria">
+	     <trim prefix="(" suffix=") and" prefixOverrides="or">
+	      	<foreach item="type" collection="typeArr"> <!-- Creiteria의 getTypeArr 호출 --><!-- item=변수명 collection=전달받은인자, list나 arr형태만가능 -->
+	      		<trim prefix="or">
+	      			<choose>
+	      				<when test="type == 'N'.toString()">
+	      					pdt_name like '%'||#{keyword}||'%'
+	      				</when>
+	      				<when test="type == 'D'.toString()">
+	      					pdt_detail like '%'||#{keyword}||'%'
+	      				</when>
+	      				<when test="type == 'C'.toString()">
+	      					pdt_company like '%'||#{keyword}||'%'
+	      				</when>
+	      			</choose>
+	      		</trim>
+	      	</foreach> 
+	      </trim>
+	
+	
+	</sql>
+	
+	
+	
+	
+	<select id="getListWithPaging" resultType="com.docmall.domain.ProductVO">
+	<![CDATA[
+		select pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	  		from 
+	      (
+	      select /*+INDEX_DESC(product_tbl2 SYS_C008168)*/
+	        rownum rn, pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	      from 
+	        product_tbl2 
+	      where  
+	   ]]>
+	   	<include refid="criteria"></include>
+	    
+	   <![CDATA[
+
+	      rownum <= #{pageNum} * #{amount}
+	      
+	      )
+		  where rn > (#{pageNum} -1) * #{amount}
+  	]]> 
+	</select>
+	
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from product_tbl2 where
+		<include refid="criteria"></include>
+		
+		pdt_num_pk > 0<!-- 조건식이 사용안되면 where bno>0이되어서 오류가안나고,  실행되면 추가조건으로 들어가짐 -->
+	</select>
+	
+	
+	<select id="edit" resultType="com.docmall.domain.ProductVO">
+		select pdt_num_pk, cate_code_prt, pdt_date_up, pdt_detail, pdt_name, pdt_discount, pdt_date_sub, pdt_buy, pdt_img, pdt_company, pdt_price, pdt_amount, cate_code 
+		from product_tbl2 
+		where pdt_num_pk= #{pdt_num_pk}
+	</select>
+	
+	<update id="editOk">
+		update product_tbl2 set cate_code_prt = #{cate_code_prt}, pdt_detail= #{pdt_detail}, pdt_name= #{pdt_name}, pdt_discount = #{pdt_discount}, pdt_date_sub = sysdate, pdt_buy = #{pdt_buy}, pdt_img = #{pdt_img}, pdt_company = #{pdt_company}, pdt_price = #{pdt_price}, pdt_amount= #{pdt_amount}, cate_code = #{cate_code} 
+		where pdt_num_pk = #{pdt_num_pk}
+	</update>
+
+	<delete id="delete">
+		delete from product_tbl2 where pdt_num_pk = #{pdt_num_pk}
+	</delete>
+	
+</mapper>

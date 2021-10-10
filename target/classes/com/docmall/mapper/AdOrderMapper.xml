@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.mapper.AdOrderMapper">
+
+ <select id="orderALLList" resultType="com.docmall.domain.OrderVO">
+ 
+ 	 <![CDATA[
+ 	 
+ 	select  odr_code, mem_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count,odr_delivery
+ 	from 
+ 	( 
+ 	SELECT 	/*+INDEX_DESC(order_tbl2 SYS_C008181)*/ 
+ 			rownum rn, odr_code, mem_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date, odr_count,odr_delivery
+	FROM order_tbl2
+	where 
+		 ]]>       
+		        
+		       
+		  <include refid="criteria"></include>
+	
+		  <![CDATA[       
+		       rownum <= #{pageNum} * #{amount}
+		        
+		      )
+		
+		  where rn > (#{pageNum} -1) * #{amount} 
+		]]>
+ 
+ </select>
+ 
+ 	<select id="getTotalCount" resultType="int">
+	  select count(*) from order_tbl2 where
+	 	<include refid="criteria"></include>
+	 
+	 odr_code > 0
+	</select>
+ 
+ <sql id="criteria">
+		<trim prefix="(" suffix=") and" prefixOverrides="or">
+		<foreach item="type" collection="typeArr">
+        	<trim prefix="or">
+        		<choose>
+        				<when test="type == 'M'.toString()">
+        					mem_id like '%'||#{keyword}||'%'
+        				</when>
+        				<when test="type == 'C'.toString()">
+        					odr_code like '%'||#{keyword}||'%'
+        				</when>
+        				<when test="type == 'N'.toString()">
+        					odr_name like '%'||#{keyword}||'%'
+        				</when>
+        			</choose>
+        		</trim>
+        	</foreach>
+        </trim> 
+	</sql>
+	
+	<select id="OrderDetailInfo" resultType="com.docmall.domain.UserOrderDetailInfo">
+		select od.odr_code, od.pdt_num, od.odr_price,od.odr_amount, p.pdt_name, p.pdt_img  from 
+		order_detail_tbl2 od inner join product_tbl2 p
+		on od.pdt_num = p.pdt_num_pk where od.odr_code = #{odr_code}
+	</select>
+	
+	<!-- 주문삭제, 트랜잭션하기, -->
+	<delete id="orderDelete">
+		delete from order_tbl2 where odr_code = #{odr_code}
+	</delete>
+	<!-- 주문 상세삭제 -->
+	<delete id="orderDetailDelete">
+		delete from order_detail_tbl2 where odr_code = #{odr_code}
+	</delete>
+	
+	<!-- 주문내역중 상품개별삭제  삭제시키면 order_tbl에 count도 빼야해서, 트랜잭션도해야한다. -->
+	<delete id="orderProductDelete">
+		delete from order_detail_tbl2 where odr_code = #{odr_code} and pdt_num = #{pdt_num}
+	</delete>
+	
+	<update id="orderCountChange">
+		update order_tbl2 set odr_count = odr_count - 1  where odr_code = #{odr_code}
+	</update>
+	
+	
+	<update id="deliveryState">
+		update order_tbl2 set odr_delivery = #{odr_delivery} where odr_code = #{odr_code}
+	</update>
+	
+
+	
+	
+	
+</mapper>

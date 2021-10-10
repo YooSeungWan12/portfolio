@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.mapper.ProductMapper">
+
+
+	<select id="mainCategory" resultType="com.docmall.domain.CategoryVO">
+		select cate_code_pk , cate_code_prt, cate_name from category_tbl2 where cate_code_prt is null
+	</select>
+	
+	<select id="subCategory" resultType="com.docmall.domain.CategoryVO">
+		select cate_code_pk , cate_code_prt, cate_name from category_tbl2 where cate_code_prt = #{cate_code_pk}
+	</select>
+	
+	
+
+	<select id = "getLast" resultType="com.docmall.domain.ProductVO">
+	<![CDATA[
+	
+		select pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	  		from 
+	      (
+	      select /*+INDEX_DESC(product_tbl2 SYS_C008168)*/
+	        rownum rn, pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	      from 
+	        product_tbl2 
+	       where rownum <= 1
+	      )
+		  
+	]]>
+
+	</select>
+	
+
+
+		<select id="getListWithPaging" resultType="com.docmall.domain.ProductVO">
+	<![CDATA[
+		select pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	  		from 
+	      (
+	      select /*+INDEX_DESC(product_tbl2 SYS_C008168)*/
+	        rownum rn, pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	      from 
+	        product_tbl2 
+	      where  rownum <= #{cri.pageNum} * #{cri.amount} and cate_code = #{cate_code} and pdt_amount >= 1
+	      
+	      )
+		  where rn > (#{cri.pageNum} -1) * #{cri.amount} and pdt_amount >= 1
+  	]]> 
+	</select>
+	
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from product_tbl2 where cate_code = #{cate_code}
+	</select>
+	
+	
+		<select id="get" resultType="com.docmall.domain.ProductVO">
+		select pdt_num_pk, cate_code_prt, pdt_date_up, pdt_detail, pdt_name, pdt_discount, pdt_date_sub, pdt_buy, pdt_img, pdt_company, pdt_price, pdt_amount, cate_code 
+		from product_tbl2 
+		where pdt_num_pk= #{pdt_num_pk}
+	</select>
+	
+	<select id="mainProductList" resultType="com.docmall.domain.ProductVO">
+		<![CDATA[
+		select pdt_num_pk, pdt_company, cate_code, pdt_img, pdt_date_sub, pdt_amount, pdt_name, pdt_buy, cate_code_prt, pdt_discount, pdt_detail, pdt_price, pdt_date_up
+		from product_tbl2 where rownum <= 4 and cate_code_prt = #{cate_code_prt} and pdt_amount >= 1 order by pdt_num_pk desc
+		]]> 
+	</select>
+	
+	
+		<sql id="criteria">
+	     <trim prefix="(" suffix=") and" prefixOverrides="or">
+	      	<foreach item="type" collection="typeArr"> <!-- Creiteria의 getTypeArr 호출 --><!-- item=변수명 collection=전달받은인자, list나 arr형태만가능 -->
+	      		<trim prefix="or">
+	      			<choose>
+	      				<when test="type == 'N'.toString()">
+	      					pdt_name like '%'||#{keyword}||'%'
+	      				</when>
+	      				<when test="type == 'D'.toString()">
+	      					pdt_detail like '%'||#{keyword}||'%'
+	      				</when>
+	      				<when test="type == 'C'.toString()">
+	      					pdt_company like '%'||#{keyword}||'%'
+	      				</when>
+	      			</choose>
+	      		</trim>
+	      	</foreach> 
+	      </trim>
+	
+	
+	</sql>
+	
+	
+	
+	
+	<select id="searchList" resultType="com.docmall.domain.ProductVO">
+	<![CDATA[
+		select pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	  		from 
+	      (
+	      select /*+INDEX_DESC(product_tbl2 SYS_C008168)*/
+	        rownum rn, pdt_num_pk, cate_code, pdt_name, pdt_price, pdt_discount, pdt_company, pdt_detail, pdt_img, pdt_amount, pdt_buy, pdt_date_sub, pdt_date_up
+	      from 
+	        product_tbl2 
+	      where  
+	   ]]>
+	   	<include refid="criteria"></include>
+	    
+	   <![CDATA[
+
+	      rownum <= #{pageNum} * #{amount} and pdt_amount > 0
+	      
+	      )
+		  where rn > (#{pageNum} -1) * #{amount} and pdt_amount > 0
+  	]]> 
+	</select>
+	
+	
+	<select id="searchCount" resultType="int">
+		select count(*) from product_tbl2 where
+		<include refid="criteria"></include>
+		
+		pdt_num_pk > 0 and pdt_amount > 0<!-- 조건식이 사용안되면 where bno>0이되어서 오류가안나고,  실행되면 추가조건으로 들어가짐 -->
+	</select>
+	
+	
+
+</mapper>

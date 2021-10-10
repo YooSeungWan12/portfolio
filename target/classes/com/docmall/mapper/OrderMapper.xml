@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.mapper.OrderMapper">
+
+	<select id = "getOrderSeq" resultType="Long">
+		select seq_odr_code2.nextval from dual
+	
+	</select>
+
+
+
+	<insert id="orderAdd">
+		insert into order_tbl2(odr_code, mem_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price,odr_count) 
+		values(#{odr_code}, #{mem_id}, #{odr_name}, #{odr_zipcode}, #{odr_addr}, #{odr_addr_d}, #{odr_phone}, #{odr_total_price},#{odr_count})
+	</insert>
+	
+	<insert id="orderDetailAdd">
+		insert into order_detail_tbl2(odr_code, pdt_num , odr_amount , odr_price) 
+		values(#{odr_code}, #{pdt_num} , #{odr_amount} , #{odr_price})
+	</insert>
+
+	
+	<select id="userOrderInfo" resultType="com.docmall.domain.OrderVO">
+		select odr_code, odr_count, mem_id, odr_name, odr_zipcode, odr_addr, odr_addr_d, odr_phone, odr_total_price, odr_date,odr_delivery
+		from order_tbl2 where mem_id = #{mem_id}
+	</select>
+	
+	<select id="userOrderDetailInfo" resultType="com.docmall.domain.UserOrderDetailInfo">
+		select od.odr_code, od.pdt_num, od.odr_amount, od.odr_price,p.pdt_name, p.pdt_img from
+		order_detail_tbl2 od inner join product_tbl2 p
+		on od.pdt_num = p.pdt_num_pk where od.odr_code = #{odr_code}
+	</select>
+
+</mapper>

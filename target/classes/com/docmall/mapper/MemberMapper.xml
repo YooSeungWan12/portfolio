@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.docmall.mapper.MemberMapper">
+
+	<insert id="join">
+		insert into member_tbl2(mem_id, mem_name, mem_pw, mem_email, mem_zipcode, mem_addr, mem_addr_d, mem_phone)
+		values(#{mem_id}, #{mem_name}, #{mem_pw}, #{mem_email}, #{mem_zipcode}, #{mem_addr}, #{mem_addr_d}, #{mem_phone}) 
+	</insert>
+
+	<select id="checkUserID" resultType="string">
+	select mem_id from member_tbl2 where mem_id = #{mem_id}
+	</select>
+
+
+	<select id="login" resultType="com.docmall.domain.MemberVO"> <!-- select값들이 MemberVO에 있는것들. -->
+		select mem_id, mem_name, mem_pw, mem_email, mem_zipcode, mem_addr, mem_addr_d, mem_phone, mem_regdate, mem_modifydate
+		from member_tbl2 where mem_id = #{mem_id}
+	</select>
+	
+	<select id="mailConfirm" resultType="com.docmall.domain.MemberVO"> <!-- select값들이 MemberVO에 있는것들. -->
+		select mem_id, mem_name, mem_pw, mem_email, mem_zipcode, mem_addr, mem_addr_d, mem_phone, mem_regdate, mem_modifydate
+		from member_tbl2 where mem_id = #{mem_id} and mem_email = #{mem_email}
+	</select>
+	
+	<update id ="pwChange">
+		update member_tbl2 set mem_pw = #{mem_pw}  where mem_id = #{mem_id} 
+	</update>
+	
+	<update id="modify">
+		update member_tbl2
+		set mem_email = #{mem_email}, mem_zipcode = #{mem_zipcode}, mem_addr = #{mem_addr}, mem_addr_d = #{mem_addr_d}, mem_phone = #{mem_phone}, mem_modifydate = sysdate
+		where mem_id = #{mem_id} and mem_pw = #{mem_pw}
+	</update>
+	
+	<delete id = "delete">
+		delete from member_tbl2 where mem_id = #{mem_id} and mem_pw = #{mem_pw} 
+	</delete>
+
+</mapper>
